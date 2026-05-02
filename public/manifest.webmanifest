@@ -8,6 +8,8 @@
   "background_color": "#121212",
   "theme_color": "#FF8C94",
   "orientation": "portrait",
+  "categories": ["productivity", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192.png",
