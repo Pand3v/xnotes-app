@@ -12,61 +12,7 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icon.svg'],
-        manifest: {
-          name: 'xnotes',
-          short_name: 'xnotes',
-          description: 'Modern Neon Notes App',
-          theme_color: '#121212',
-          background_color: '#121212',
-          display: 'standalone',
-          orientation: 'portrait',
-          scope: '/',
-          start_url: '/',
-          categories: ['productivity', 'utilities'],
-          icons: [
-            {
-              src: 'icon-192.png',
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'any'
-            },
-            {
-              src: 'icon-512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any'
-            },
-            {
-              src: 'icon.svg',
-              sizes: 'any',
-              type: 'image/svg+xml',
-              purpose: 'any'
-            },
-            {
-              src: 'icon.svg',
-              sizes: 'any',
-              type: 'image/svg+xml',
-              purpose: 'maskable'
-            }
-          ],
-          screenshots: [
-            {
-              src: 'icon.svg',
-              sizes: '1280x720',
-              type: 'image/svg+xml',
-              form_factor: 'wide',
-              label: 'xnotes Desktop'
-            },
-            {
-              src: 'icon.svg',
-              sizes: '720x1280',
-              type: 'image/svg+xml',
-              form_factor: 'narrow',
-              label: 'xnotes Mobile'
-            }
-          ]
-        },
+        includeAssets: ['icon-192.png', 'icon-512.png'],
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg}']
         }

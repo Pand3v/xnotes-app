@@ -1,8 +1,8 @@
 {
+  "id": "com.xnotes.app",
   "name": "xnotes",
   "short_name": "xnotes",
   "description": "Modern Neon Notes App",
-  "id": "com.xnotes.app",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -10,7 +10,6 @@
   "theme_color": "#FF1744",
   "orientation": "portrait",
   "categories": ["productivity", "utilities"],
-  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192.png",
