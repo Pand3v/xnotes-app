@@ -35,20 +35,32 @@ export default defineConfig(({mode}) => {
               src: 'icon.svg',
               sizes: '512x512',
               type: 'image/svg+xml',
+              purpose: 'any'
+            },
+            {
+              src: 'icon.svg',
+              sizes: '192x192',
+              type: 'image/svg+xml',
+              purpose: 'maskable'
+            },
+            {
+              src: 'icon.svg',
+              sizes: '512x512',
+              type: 'image/svg+xml',
               purpose: 'maskable'
             }
           ],
           screenshots: [
             {
               src: 'icon.svg',
-              sizes: '512x512',
+              sizes: '1280x720',
               type: 'image/svg+xml',
               form_factor: 'wide',
               label: 'xnotes Desktop'
             },
             {
               src: 'icon.svg',
-              sizes: '512x512',
+              sizes: '720x1280',
               type: 'image/svg+xml',
               form_factor: 'narrow',
               label: 'xnotes Mobile'

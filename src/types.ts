@@ -14,4 +14,6 @@ export type Note = {
   color?: string;
   createdAt: number;
   updatedAt: number;
+  isTrashed?: boolean;
+  isPinned?: boolean;
 };

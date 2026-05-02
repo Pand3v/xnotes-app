@@ -6,7 +6,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Folder as FolderIcon, FileText, Download, X, Search, LayoutGrid, Rows3, Settings, Menu, ChevronRight, LogIn, LogOut } from 'lucide-react';
+import { Plus, Folder as FolderIcon, FileText, Download, X, Search, LayoutGrid, Rows3, Settings, Menu, ChevronRight, LogIn, LogOut, Trash2, RotateCcw, Pin, PinOff } from 'lucide-react';
 import { RichTextEditor } from './components/RichTextEditor';
 import { cn } from './lib/utils';
 import type { Folder, Note } from './types';
@@ -67,13 +67,15 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [activeFolderId, setActiveFolderId] = useState<string | 'all'>('all');
+  const [activeFolderId, setActiveFolderId] = useState<string | 'all' | 'trash' | 'pinned'>('all');
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
+  const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -118,8 +120,13 @@ function App() {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      if (err.code === 'auth/unauthorized-domain') {
+        alert("Erro: O domínio do Netlify não está autorizado no Firebase.\n\nPara corrigir: Acesse o Firebase Console > Authentication > Settings (Configurações) > Authorized domains (Domínios Autorizados) e adicione a URL do seu aplicativo.");
+      } else {
+        alert("Erro ao fazer login: " + err.message);
+      }
     }
   };
 
@@ -131,9 +138,21 @@ function App() {
   
   const filteredNotes = useMemo(() => {
     return notes
-      .filter(n => (activeFolderId === 'all' ? true : n.folderId === activeFolderId))
+      .filter(n => {
+        if (activeFolderId === 'trash') return n.isTrashed === true;
+        if (n.isTrashed) return false;
+        if (activeFolderId === 'pinned') return n.isPinned === true;
+        return activeFolderId === 'all' ? true : n.folderId === activeFolderId;
+      })
       .filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()) || n.content.toLowerCase().includes(searchQuery.toLowerCase()))
-      .sort((a, b) => b.updatedAt - a.updatedAt);
+      .sort((a, b) => {
+        if (activeFolderId !== 'pinned' && activeFolderId !== 'trash') {
+          if (a.isPinned !== b.isPinned) {
+            return a.isPinned ? -1 : 1;
+          }
+        }
+        return b.updatedAt - a.updatedAt;
+      });
   }, [notes, activeFolderId, searchQuery]);
 
   const createFolder = async (e?: React.FormEvent) => {
@@ -159,56 +178,85 @@ function App() {
     const newNote: Note = {
       id,
       userId: user.uid,
-      folderId: activeFolderId === 'all' ? null : activeFolderId,
+      folderId: activeFolderId === 'all' || activeFolderId === 'trash' || activeFolderId === 'pinned' ? null : activeFolderId,
       title: 'Nota sem título',
       content: '',
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      isTrashed: false,
     };
     const path = `users/${user.uid}/notes/${id}`;
     try {
       await setDoc(doc(db, 'users', user.uid, 'notes', id), newNote);
+      if (activeFolderId === 'trash') {
+        setActiveFolderId('all');
+      }
       setEditingNoteId(id);
     } catch (err) {
       handleFirestoreError(err, OperationType.CREATE, path);
     }
   };
 
-  const deleteNote = async (id: string, e: React.MouseEvent) => {
+  const trashNote = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) return;
-    if (window.confirm('Tem certeza que deseja excluir esta nota?')) {
-      const path = `users/${user.uid}/notes/${id}`;
-      try {
-        await deleteDoc(doc(db, 'users', user.uid, 'notes', id));
-        if (editingNoteId === id) setEditingNoteId(null);
-      } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, path);
-      }
+    await updateNote(id, { isTrashed: true });
+    if (editingNoteId === id) setEditingNoteId(null);
+  };
+
+  const restoreNote = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) return;
+    await updateNote(id, { isTrashed: false });
+  };
+
+  const togglePinNote = async (id: string, currentPinned: boolean, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) return;
+    await updateNote(id, { isPinned: !currentPinned });
+  };
+
+  const deleteNote = async (id: string, e: React.MouseEvent, confirmed = false) => {
+    e.stopPropagation();
+    if (!confirmed) {
+      setNoteToDelete(id);
+      return;
+    }
+    if (!user) return;
+    const path = `users/${user.uid}/notes/${id}`;
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'notes', id));
+      if (editingNoteId === id) setEditingNoteId(null);
+      setNoteToDelete(null);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, path);
     }
   };
 
-  const deleteFolder = async (id: string, e: React.MouseEvent) => {
+  const deleteFolder = async (id: string, e: React.MouseEvent, confirmed = false) => {
     e.stopPropagation();
+    if (!confirmed) {
+      setFolderToDelete(id);
+      return;
+    }
     if (!user) return;
-    if (window.confirm('Excluir pasta e TODAS as suas notas?')) {
-      const path = `users/${user.uid}/folders/${id}`;
-      try {
-        await deleteDoc(doc(db, 'users', user.uid, 'folders', id));
-        // Delete related notes
-        const relatedNotes = notes.filter(n => n.folderId === id);
-        for (const note of relatedNotes) {
-          const notePath = `users/${user.uid}/notes/${note.id}`;
-          try {
-            await deleteDoc(doc(db, 'users', user.uid, 'notes', note.id));
-          } catch (err) {
-            handleFirestoreError(err, OperationType.DELETE, notePath);
-          }
+    const path = `users/${user.uid}/folders/${id}`;
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'folders', id));
+      // Delete related notes
+      const relatedNotes = notes.filter(n => n.folderId === id);
+      for (const note of relatedNotes) {
+        const notePath = `users/${user.uid}/notes/${note.id}`;
+        try {
+          await deleteDoc(doc(db, 'users', user.uid, 'notes', note.id));
+        } catch (err) {
+          handleFirestoreError(err, OperationType.DELETE, notePath);
         }
-        if (activeFolderId === id) setActiveFolderId('all');
-      } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, path);
       }
+      if (activeFolderId === id) setActiveFolderId('all');
+      setFolderToDelete(null);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, path);
     }
   };
 
@@ -330,7 +378,23 @@ function App() {
                 >
                   <FileText size={18} />
                   <span className="font-medium text-sm">Todas as Notas</span>
-                  <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded-full">{notes.length}</span>
+                  <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded-full">{notes.filter(n => !n.isTrashed).length}</span>
+                </div>
+                <div 
+                  className={cn("flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all", activeFolderId === 'pinned' ? "bg-white/10 shadow-lg shadow-[#FF8C94]/5 text-white" : "text-white/70 hover:text-white hover:bg-white/5")}
+                  onClick={() => setActiveFolderId('pinned')}
+                >
+                  <Pin size={18} />
+                  <span className="font-medium text-sm">Fixadas</span>
+                  <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded-full">{notes.filter(n => n.isPinned && !n.isTrashed).length}</span>
+                </div>
+                <div 
+                  className={cn("flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all", activeFolderId === 'trash' ? "bg-white/10 shadow-lg shadow-[#FF8C94]/5 text-[#FF8C94]" : "text-white/70 hover:text-[#FF8C94] hover:bg-white/5")}
+                  onClick={() => setActiveFolderId('trash')}
+                >
+                  <Trash2 size={18} />
+                  <span className="font-medium text-sm">Lixeira</span>
+                  <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded-full">{notes.filter(n => n.isTrashed).length}</span>
                 </div>
               </div>
 
@@ -343,7 +407,7 @@ function App() {
                 </div>
                 <div className="space-y-1">
                   {folders.map(folder => {
-                    const folderNotesCount = notes.filter(n => n.folderId === folder.id).length;
+                    const folderNotesCount = notes.filter(n => n.folderId === folder.id && !n.isTrashed).length;
                     return (
                       <div 
                         key={folder.id}
@@ -434,7 +498,7 @@ function App() {
             </div>
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold text-white tracking-tight">
-                {activeFolderId === 'all' ? 'Todas as Notas' : activeFolder?.name}
+                {activeFolderId === 'all' ? 'Todas as Notas' : activeFolderId === 'trash' ? 'Lixeira' : activeFolderId === 'pinned' ? 'Fixadas' : activeFolder?.name}
               </h2>
             </div>
           </div>
@@ -480,19 +544,35 @@ function App() {
                     </div>
                     <div className={cn("mt-4 flex items-center justify-between text-xs text-white/50", viewMode === 'list' && "mt-0 shrink-0 w-48 flex-col items-end justify-center")}>
                       <span className="opacity-0"></span>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center gap-1 opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                         <div className="relative group/export inline-block">
-                          <button className="p-2 hover:bg-white/10 rounded-lg text-white/50 hover:text-[#FF8C94]">
-                            <Download size={14} />
+                          <button onClick={(e) => exportNote(note, 'txt', e)} className="p-2 hover:bg-white/10 rounded-lg text-white/50 hover:text-[#FF8C94]">
+                            <Download size={16} />
                           </button>
                           <div className="absolute bottom-full mb-1 right-0 bg-[#121212] rounded-lg shadow-xl border border-white/10 hidden group-hover/export:flex flex-col whitespace-nowrap overflow-hidden z-20">
                             <button onClick={(e) => exportNote(note, 'txt', e)} className="px-4 py-2 hover:bg-white/10 text-left text-white text-xs">Como .TXT</button>
                             <button onClick={(e) => exportNote(note, 'doc', e)} className="px-4 py-2 hover:bg-white/10 text-left text-white text-xs border-t border-white/10">Como .DOC</button>
                           </div>
                         </div>
-                        <button onClick={(e) => deleteNote(note.id, e)} className="p-2 hover:bg-[#FF8C94]/20 rounded-lg text-white/50 hover:text-[#FF8C94]">
-                          <X size={14} />
-                        </button>
+                        {activeFolderId === 'trash' ? (
+                          <>
+                            <button onClick={(e) => restoreNote(note.id, e)} className="p-2 hover:bg-[#FF8C94]/20 rounded-lg text-[#FF8C94]" title="Restaurar Nota">
+                              <RotateCcw size={16} />
+                            </button>
+                            <button onClick={(e) => deleteNote(note.id, e)} className="p-2 hover:bg-red-500/20 rounded-lg text-red-400" title="Excluir Definitivamente">
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={(e) => togglePinNote(note.id, !!note.isPinned, e)} className={cn("p-2 rounded-lg transition-colors", note.isPinned ? "bg-[#FF8C94]/20 text-[#FF8C94]" : "hover:bg-white/10 text-white/50 hover:text-white")} title={note.isPinned ? "Desfixar" : "Fixar"}>
+                              {note.isPinned ? <PinOff size={16} /> : <Pin size={16} />}
+                            </button>
+                            <button onClick={(e) => trashNote(note.id, e)} className="p-2 hover:bg-red-500/20 rounded-lg text-white/50 hover:text-red-400" title="Mover para Lixeira">
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -558,6 +638,32 @@ function App() {
                        <Download size={14} className="hidden sm:block" /> <span>TXT</span>
                     </button>
                   </div>
+                  {activeFolderId === 'trash' ? (
+                    <button 
+                      onClick={(e) => deleteNote(editingNote.id, e)}
+                      className="flex items-center gap-2 p-2 sm:px-4 bg-red-500/20 hover:bg-red-500/40 rounded-full text-red-400 font-bold transition-all ml-2"
+                      title="Excluir Definitivamente"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  ) : (
+                    <>
+                      <button 
+                        onClick={(e) => togglePinNote(editingNote.id, !!editingNote.isPinned, e)}
+                        className={cn("flex items-center gap-2 p-2 sm:px-4 rounded-full font-bold transition-all ml-2", editingNote.isPinned ? "bg-[#FF8C94]/20 text-[#FF8C94]" : "bg-white/5 hover:bg-white/10 text-white/50 hover:text-white")}
+                        title={editingNote.isPinned ? "Desfixar" : "Fixar"}
+                      >
+                        {editingNote.isPinned ? <PinOff size={18} /> : <Pin size={18} />}
+                      </button>
+                      <button 
+                        onClick={(e) => trashNote(editingNote.id, e)}
+                        className="flex items-center gap-2 p-2 sm:px-4 bg-white/5 hover:bg-red-500/20 rounded-full text-white/50 hover:text-red-400 font-bold transition-all ml-2"
+                        title="Mover para Lixeira"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </>
+                  )}
                   <button 
                     onClick={() => setEditingNoteId(null)}
                     className="flex items-center gap-2 px-4 sm:px-6 py-2 bg-[#FF8C94] hover:bg-[#ff7a84] hover:scale-105 active:scale-95 rounded-full text-[#121212] font-bold transition-all shadow-lg shadow-[#FF8C94]/20 whitespace-nowrap ml-2"
@@ -622,6 +728,60 @@ function App() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {noteToDelete && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" 
+            onClick={() => setNoteToDelete(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-[#121212] border border-white/10 p-6 rounded-2xl max-w-sm w-full shadow-2xl" 
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-bold text-white mb-2">Excluir permanentemente?</h3>
+              <p className="text-white/60 mb-6 text-sm">Esta ação não pode ser desfeita e a nota será removida para sempre.</p>
+              <div className="flex justify-end gap-3">
+                <button className="px-4 py-2 font-medium text-white/70 hover:text-white" onClick={() => setNoteToDelete(null)}>Cancelar</button>
+                <button className="px-4 py-2 font-medium bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30" onClick={(e) => deleteNote(noteToDelete, e, true)}>Excluir</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {folderToDelete && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" 
+            onClick={() => setFolderToDelete(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-[#121212] border border-white/10 p-6 rounded-2xl max-w-sm w-full shadow-2xl" 
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-bold text-white mb-2">Excluir Pasta?</h3>
+              <p className="text-white/60 mb-6 text-sm">Esta ação excluirá a pasta e <strong className="text-red-400">TODAS</strong> as notas contidas nela. Isso não pode ser desfeito.</p>
+              <div className="flex justify-end gap-3">
+                <button className="px-4 py-2 font-medium text-white/70 hover:text-white" onClick={() => setFolderToDelete(null)}>Cancelar</button>
+                <button className="px-4 py-2 font-medium bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30" onClick={(e) => deleteFolder(folderToDelete, e, true)}>Excluir Pasta</button>
+              </div>
             </motion.div>
           </motion.div>
         )}

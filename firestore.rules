@@ -23,8 +23,17 @@ service cloud.firestore {
     }
 
     function isValidNote(data) {
-      return data.keys().hasAll(['id', 'userId', 'folderId', 'title', 'content', 'createdAt', 'updatedAt'])
-        && (data.keys().size() == 7 || (data.keys().size() == 8 && 'color' in data && data.color is string && data.color.size() <= 30))
+      let baseHasSize = data.keys().size();
+      let hasColor = 'color' in data;
+      let hasTrashed = 'isTrashed' in data;
+      let hasPinned = 'isPinned' in data;
+      let validKeys = data.keys().hasAll(['id', 'userId', 'folderId', 'title', 'content', 'createdAt', 'updatedAt']);
+      let validColor = !hasColor || (data.color is string && data.color.size() <= 30);
+      let validTrashed = !hasTrashed || data.isTrashed is bool;
+      let validPinned = !hasPinned || data.isPinned is bool;
+      let sizeCheck = baseHasSize <= 10; // up to 10 keys
+
+      return validKeys && sizeCheck && validColor && validTrashed && validPinned
         && data.id is string
         && data.userId == request.auth.uid
         && (data.folderId == null || (data.folderId is string && data.folderId.size() <= 128))
@@ -52,7 +61,7 @@ service cloud.firestore {
           && isValidNote(incoming())
           && incoming().userId == existing().userId
           && incoming().createdAt == existing().createdAt
-          && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'folderId', 'color', 'updatedAt']);
+          && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'folderId', 'color', 'updatedAt', 'isTrashed', 'isPinned']);
         allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(noteId);
       }
     }
