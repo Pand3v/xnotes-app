@@ -1,13 +1,35 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="15" result="blur" />
+    <linearGradient id="bg_gradient" x1="0" y1="512" x2="512" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1A0B2E"/>
+      <stop offset="1" stop-color="#0A0A0E"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
   </defs>
-  <rect width="512" height="512" rx="112" fill="#0A0A0E"/>
+  
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg_gradient)"/>
+  
+  <!-- Futuristic X Path with Notches -->
   <g filter="url(#glow)">
-    <path d="M140 140L230 256L140 372H200L256 300L312 372H372L282 256L372 140H312L256 212L200 140H140Z" fill="#FF2D55" />
+    <path d="M140 140H170L185 155H140V170H195L210 185H140V210L256 310L372 426V396L357 381H372V366L342 336L372 210V140H312L256 196L190 130L140 140ZM372 140H342L256 226L210 180L140 250V372H200L256 316L312 372H372V250L256 120L372 140Z" fill="#FF2D75" fill-opacity="0.3"/>
+    
+    <!-- Main Neon X Shape -->
+    <path d="
+      M 130 130 L 190 130 L 205 145 L 130 145 L 130 160 L 215 160 L 230 175 L 130 175 L 130 200 
+      L 245 305 L 256 316 L 267 305 L 382 200 L 382 130 L 322 130 L 256 196 L 205 130 L 130 130 Z
+      M 382 382 L 322 382 L 307 367 L 382 367 L 382 352 L 297 352 L 282 337 L 382 337 L 382 312
+      L 267 212 L 256 201 L 245 212 L 130 312 L 130 382 L 190 382 L 256 316 L 307 382 L 382 382 Z" 
+      fill="#FF1744" />
   </g>
-  <path d="M140 140L230 256L140 372H200L256 300L312 372H372L282 256L372 140H312L256 212L200 140H140Z" fill="#FF1744" />
+  
+  <!-- Bright accent parts -->
+  <path d="
+    M 130 130 L 190 130 L 205 145 L 130 145 Z
+    M 130 160 L 215 160 L 230 175 L 130 175 Z
+    M 382 382 L 322 382 L 307 367 L 382 367 Z" 
+    fill="#FF6090" filter="url(#glow)"/>
 </svg>
