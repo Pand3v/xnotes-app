@@ -5,10 +5,14 @@
   "description": "Modern Neon Notes App",
   "start_url": "/",
   "scope": "/",
+  "lang": "pt-BR",
+  "dir": "ltr",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "minimal-ui"],
   "background_color": "#0A0A0E",
   "theme_color": "#FF1744",
   "orientation": "portrait",
+  "prefer_related_applications": false,
   "categories": ["productivity", "utilities"],
   "icons": [
     {
