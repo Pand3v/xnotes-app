@@ -1,0 +1,66 @@
+{
+  "entities": {
+    "Folder": {
+      "title": "Folder",
+      "description": "A folder representing a collection of notes.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "ID of the user who owns the folder"
+        },
+        "name": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp"
+        }
+      },
+      "required": ["userId", "name", "createdAt"]
+    },
+    "Note": {
+      "title": "Note",
+      "description": "A single note.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "ID of the user who owns the note"
+        },
+        "folderId": {
+          "type": ["string", "null"],
+          "description": "ID of the folder this note belongs to, or null if it's in the root"
+        },
+        "title": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp"
+        },
+        "updatedAt": {
+          "type": "number",
+          "description": "Timestamp"
+        }
+      },
+      "required": ["userId", "title", "content", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/folders/{folderId}": {
+      "schema": "Folder",
+      "description": "Stores user folders"
+    },
+    "/users/{userId}/notes/{noteId}": {
+      "schema": "Note",
+      "description": "Stores user notes"
+    }
+  }
+}

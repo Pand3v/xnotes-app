@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-[#121212] text-[#FF8C94] font-sans antialiased overflow-hidden;
+  }
+
+  /* Scrollbar override */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent; 
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-white/20 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-white/30;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl;
+  }
+  
+  .glass-button {
+    @apply bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/10 shadow-lg shadow-[#FF8C94]/5 transition-all duration-200 active:scale-95;
+  }
+
+  .glass-input {
+    @apply bg-white/5 border border-white/10 rounded-full px-4 py-2 focus:outline-none focus:border-[#FF8C94]/50 focus:ring-1 focus:ring-[#FF8C94]/20 text-white placeholder-white/40 transition-colors;
+  }
+}
+
+/* TipTap Editor Styles */
+.tiptap {
+  @apply focus:outline-none min-h-[300px] text-white/80 leading-relaxed;
+}
+
+.tiptap p {
+  @apply mb-4;
+}
+
+.tiptap h1, .tiptap h2, .tiptap h3 {
+  @apply font-semibold text-[#FF8C94] mt-6 mb-3;
+}
+
+.tiptap h1 { @apply text-3xl; }
+.tiptap h2 { @apply text-2xl; }
+.tiptap h3 { @apply text-xl; }
+
+.tiptap a {
+  @apply text-[#FF8C94] underline decoration-[#FF8C94]/40 underline-offset-4 hover:decoration-[#FF8C94] transition-all;
+}
+
+.tiptap img {
+  @apply max-w-full h-auto rounded-lg border border-white/10 shadow-lg my-4 bg-white/5;
+}
+.tiptap img.ProseMirror-selectednode {
+  @apply border-[#FF8C94] ring-2 ring-[#FF8C94]/20;
+}
+
+.tiptap ul {
+  @apply list-disc list-outside ml-6 mb-4 marker:text-[#FF8C94]/70;
+}
+
+.tiptap ol {
+  @apply list-decimal list-outside ml-6 mb-4 marker:text-[#FF8C94]/70;
+}
+
+.tiptap blockquote {
+  @apply border-l-2 border-[#FF8C94]/30 pl-4 italic text-white/50 my-4;
+}

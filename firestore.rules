@@ -1,0 +1,60 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null && request.auth.token.email_verified == true; }
+    
+    function isValidFolder(data) {
+      return data.keys().hasAll(['id', 'userId', 'name', 'createdAt'])
+        && data.keys().size() == 4
+        && data.id is string
+        && data.userId == request.auth.uid
+        && data.name is string && data.name.size() <= 200
+        && data.createdAt is number;
+    }
+
+    function isValidNote(data) {
+      return data.keys().hasAll(['id', 'userId', 'folderId', 'title', 'content', 'createdAt', 'updatedAt'])
+        && (data.keys().size() == 7 || (data.keys().size() == 8 && 'color' in data && data.color is string && data.color.size() <= 30))
+        && data.id is string
+        && data.userId == request.auth.uid
+        && (data.folderId == null || (data.folderId is string && data.folderId.size() <= 128))
+        && data.title is string && data.title.size() <= 300
+        && data.content is string && data.content.size() <= 500000
+        && data.createdAt is number
+        && data.updatedAt is number;
+    }
+
+    match /users/{userId} {
+      match /folders/{folderId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(folderId) && isValidFolder(incoming());
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(folderId) 
+          && isValidFolder(incoming())
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().diff(existing()).affectedKeys().hasOnly(['name']);
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(folderId);
+      }
+      match /notes/{noteId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(noteId) && isValidNote(incoming());
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(noteId) 
+          && isValidNote(incoming())
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'folderId', 'color', 'updatedAt']);
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(noteId);
+      }
+    }
+  }
+}
