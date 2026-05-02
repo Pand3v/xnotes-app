@@ -6,7 +6,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Folder as FolderIcon, FileText, Download, X, Search, LayoutGrid, Rows3, Settings, Menu, ChevronRight, LogIn, LogOut, Trash2, RotateCcw, Pin, PinOff } from 'lucide-react';
+import { Plus, Folder as FolderIcon, FileText, Download, X, Search, LayoutGrid, Rows3, Settings, Menu, ChevronRight, LogIn, LogOut, Trash2, RotateCcw, Pin, PinOff, MessageSquare } from 'lucide-react';
 import { RichTextEditor } from './components/RichTextEditor';
 import { cn } from './lib/utils';
 import type { Folder, Note } from './types';
@@ -431,6 +431,17 @@ function App() {
             </div>
 
             <div className="mt-auto p-6 flex flex-col gap-4">
+              <a 
+                href="#" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-white/50 hover:text-white hover:bg-[#5865F2]/20 transition-all text-sm mb-2 border border-white/5"
+              >
+                <div className="w-6 h-6 bg-[#5865F2] rounded flex items-center justify-center text-white">
+                  <MessageSquare size={14} />
+                </div>
+                <span className="font-medium">Comunidade Discord</span>
+              </a>
               <div className="flex items-center justify-between text-white/50 text-xs px-2">
                 <span className="truncate mr-2">{user?.email}</span>
                 <button onClick={handleLogout} className="hover:text-[#FF8C94] transition-colors" title="Sair">
