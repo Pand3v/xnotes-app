@@ -1,8 +1,8 @@
 {
-  "id": "app.netlify.xnotes_app.twa",
+  "id": "/",
   "name": "xnotes",
   "short_name": "xnotes",
-  "description": "A modern neon-styled notes application.",
+  "description": "Modern Neon Notes App",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0A0A0E",
