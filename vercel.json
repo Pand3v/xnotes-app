@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/((?!assets/|icon-.*\\.png|icon\\.svg|favicon\\.ico|sw\\.js|manifest\\.webmanifest|workbox-.*\\.js|registerSW\\.js).*)", "destination": "/index.html" }
+    { "source": "/((?!assets/|.*\\.).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
@@ -13,7 +13,7 @@
       ]
     },
     {
-      "source": "/manifest.webmanifest",
+      "source": "/manifest.json",
       "headers": [
         {
           "key": "Content-Type",
@@ -35,15 +35,6 @@
         {
           "key": "Service-Worker-Allowed",
           "value": "/"
-        }
-      ]
-    },
-    {
-      "source": "/(.*).png",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "image/png"
         }
       ]
     }
