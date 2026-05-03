@@ -1,11 +1,21 @@
 {
+  "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!.*\\.).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    },
     {
       "source": "/(sw.js|registerSW.js)",
       "headers": [
@@ -25,10 +35,15 @@
         {
           "key": "Content-Type",
           "value": "application/manifest+json"
-        },
+        }
+      ]
+    },
+    {
+      "source": "/icon-(192|512).png",
+      "headers": [
         {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
+          "key": "Content-Type",
+          "value": "image/png"
         }
       ]
     }
