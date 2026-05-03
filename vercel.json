@@ -7,11 +7,15 @@
   ],
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/(sw.js|registerSW.js)",
       "headers": [
         {
           "key": "Service-Worker-Allowed",
           "value": "/"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
         }
       ]
     },
