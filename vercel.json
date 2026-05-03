@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/((?!assets/|.*\\.(?:png|jpg|jpeg|gif|svg|ico|json|js|css|webmanifest)).*)", "destination": "/index.html" }
+    { "source": "/((?!assets/|icon-.*\\.png|icon\\.svg|favicon\\.ico|sw\\.js|manifest\\.webmanifest|workbox-.*\\.js).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
@@ -13,7 +13,7 @@
       ]
     },
     {
-      "source": "/manifest.json",
+      "source": "/manifest.webmanifest",
       "headers": [
         {
           "key": "Content-Type",
