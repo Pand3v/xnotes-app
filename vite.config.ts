@@ -13,7 +13,61 @@ export default defineConfig(({mode}) => {
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['icon-192.png', 'icon-512.png', 'icon.svg'],
-        manifest: false,
+        manifest: {
+          id: 'com.xnotes.app',
+          name: 'xnotes',
+          short_name: 'xnotes',
+          description: 'Modern Neon Notes App',
+          theme_color: '#FF1744',
+          background_color: '#0A0A0E',
+          display: 'standalone',
+          orientation: 'portrait',
+          lang: 'pt-BR',
+          dir: 'ltr',
+          categories: ['productivity', 'utilities'],
+          icons: [
+            {
+              src: 'icon-192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any'
+            },
+            {
+              src: 'icon-192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'maskable'
+            },
+            {
+              src: 'icon-512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any'
+            },
+            {
+              src: 'icon-512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable'
+            }
+          ],
+          screenshots: [
+            {
+              src: 'https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=1280&q=80',
+              sizes: '1280x720',
+              type: 'image/jpeg',
+              form_factor: 'wide',
+              label: 'xnotes Desktop'
+            },
+            {
+              src: 'https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=720&h=1280&q=80',
+              sizes: '720x1280',
+              type: 'image/jpeg',
+              form_factor: 'narrow',
+              label: 'xnotes Mobile'
+            }
+          ]
+        },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg}']
         }
